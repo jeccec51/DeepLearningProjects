@@ -16,6 +16,7 @@ def load_data(path):
 
     return data
 
+
 def preprocess_and_save_data(dataset_path, token_lookup, create_lookup_tables, vocab_treshold):
     """
     Preprocess Text Data
