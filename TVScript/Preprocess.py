@@ -1,7 +1,9 @@
 import utils
+import helper
 import problem_unittests as tests
 from string import punctuation
 from collections import Counter
+from params import data_dir
 
 
 def create_lookup_tables(words):
@@ -41,4 +43,12 @@ def token_lookup():
     }
     return punctuation_lookup
 
+
+def helper_preprocess():
+    helper.preprocess_and_save_data(data_dir, token_lookup, create_lookup_tables)
+
+
+def helper_load_preprocess_settings():
+    int_text, vocab_to_int, int_to_vocab, token_dict = helper.load_preprocess()
+    return int_text, vocab_to_int, int_to_vocab, token_dict
 # tests.test_tokenize(token_lookup)
