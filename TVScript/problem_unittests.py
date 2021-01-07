@@ -146,7 +146,7 @@ def test_rnn(RNN, train_on_gpu):
     
     # create test RNN
     # params: (vocab_size, output_size, embedding_dim, hidden_dim, n_layers)
-    rnn = RNN(vocab_size, output_size, embedding_dim, hidden_dim, n_layers)
+    rnn = RNN(vocab_size, output_size, embedding_dim, hidden_dim, n_layers, 0.5, train_on_gpu)
     
     # create test input
     a = np.random.randint(vocab_size, size=(batch_size, sequence_length))

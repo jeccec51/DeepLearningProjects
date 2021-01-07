@@ -7,6 +7,7 @@ import numpy as np
 import params
 import torch.nn.functional as F
 
+
 # _, train_on_gpu = params.get_device()
 
 
@@ -19,47 +20,24 @@ def batch_data(words, sequence_length, batch_size, log=1):
     :param batch_size: The size of each batch; the number of sequences in a batch
     :return: data_loaders: DataLoader with batched data
     """
-    words_len = len(words)
-    feature_tensors = np.array([words[i:sequence_length + i] for i in range(words_len - sequence_length)])
-    # target_tensors = np.array([words[sequence_length+i] for i in range(1, words_len)])
-    target_tensors = []
-    for i in range(words_len - sequence_length):
-        if (sequence_length + i) < words_len:
-            target = words[sequence_length + i]
+    n_batches = len(words) // batch_size
+    # Filter the residual data so that we have only full atches
+    words = words[:n_batches * batch_size]
+    future_tensors, targets = [], []
+    for ii in range(0, len(words) - sequence_length):
+        start = ii
+        end = sequence_length + ii
+        data = words[start:end]
+        future_tensors.append(data)
+        if (end + 1) >= (len(words)):
+            target_word = words[0]
         else:
-            target = words[0]
-        target_tensors.append([target for jj in range(sequence_length)])
-    target_tensors = np.array(target_tensors)
-    if log:
-        print(f'feature_tensors:\n{feature_tensors}\n')
-        print(f'target_tensors:\n{target_tensors}\n')
-    split_fraction = 0.8
-    split_idx = int(len(feature_tensors) * split_fraction)
-    train_x, remaining_x = feature_tensors[:split_idx], feature_tensors[split_idx:]
-    train_y, remaining_y = target_tensors[:split_idx], target_tensors[split_idx:]
-
-    test_idx = int(len(remaining_x) * 0.5)
-    val_x, test_x = remaining_x[:test_idx], remaining_x[test_idx:]
-    val_y, test_y = remaining_y[:test_idx], remaining_y[test_idx:]
-
-    if log:
-        print("\t\t\tFeature Shapes:")
-        print("Train set: \t\t{}".format(train_x.shape),
-              "\nValidation set: \t{}".format(val_x.shape),
-              "\nTest set: \t{}".format(test_x.shape))
-
+            target_word = words[end + 1]
+        targets.append(target_word)
     # create Tensor datasets
-    train_data = TensorDataset(torch.from_numpy(train_x), torch.from_numpy(train_y))
-    valid_data = TensorDataset(torch.from_numpy(val_x), torch.from_numpy(val_y))
-    test_data = TensorDataset(torch.from_numpy(test_x), torch.from_numpy(test_y))
-
-    # make sure the SHUFFLE your training data
-    train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size)
-    valid_loader = DataLoader(valid_data, shuffle=True, batch_size=batch_size)
-    test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size)
-
-    data_loaders = {'train': train_loader, 'valid': valid_loader, 'test': test_loader}
-    return data_loaders
+    data = TensorDataset(torch.from_numpy(np.asarray(future_tensors)), torch.from_numpy(np.asarray(targets)))
+    data_loader = DataLoader(data, shuffle=False, batch_size=batch_size)
+    return data_loader
 
 
 class RNN(nn.Module):
@@ -97,7 +75,7 @@ class RNN(nn.Module):
         """
         batch_size = nn_input.size(0)
         # embeddings and lstm_out
-        nn_input = nn_input.long()
+        # nn_input = nn_input.long()
         embeds = self.embedding(nn_input)
         lstm_out, hidden = self.lstm(embeds, hidden)
         # stack up lstm outputs
@@ -171,7 +149,10 @@ def forward_back_prop(rnn, optimizer, criterion, inp, target, hidden, train_on_g
     return loss.item(), hidden
 
 
-def train_rnn(rnn, batch_size, optimizer, criterion, n_epochs, train_loader, show_every_n_batches=100, train_on_gpu=False):
+def train_rnn(rnn, batch_size, optimizer, criterion, n_epochs, train_loader, show_every_n_batches=100,
+              train_on_gpu=False):
+    if train_on_gpu:
+        rnn = rnn.cuda()
     batch_losses = []
     rnn.train()
     print("Training for %d epoch(s)..." % n_epochs)
@@ -260,4 +241,3 @@ def generate(rnn, prime_id, int_to_vocab, token_dict, pad_value, predict_len=100
 
     # return all the sentences
     return gen_sentences
-

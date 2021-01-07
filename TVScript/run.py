@@ -6,7 +6,7 @@ import TVScriptGen
 import params
 import torch
 
-train_on_gpu = False
+train_on_gpu = params.get_device()
 text = helper.load_data(params.data_dir)
 view_line_range = (0, 10)
 lines = text.split('\n')
@@ -29,21 +29,19 @@ else:
     token_dict = None
 # pre-process training data
 # int_text, vocab_to_int, int_to_vocab, token_dict = helper.load_preprocess()
-data_loader_pack = TVScriptGen.batch_data(int_text, params.seq_length, params.batch_size)
 # Test Batching
 if params.log:
     test_text = range(50)
     t_loader = TVScriptGen.batch_data(test_text, sequence_length=5, batch_size=10)
-    for key, data in t_loader.items():
-        data_iter = iter(t_loader[key])
-        sample_x, sample_y = data_iter.next()
-        print(key)
-        print(sample_x.shape)
-        print(sample_x)
-        print()
-        print(sample_y.shape)
-        print(sample_y)
-        print()
+    data_iter = iter(t_loader)
+    sample_x, sample_y = data_iter.next()
+    print(sample_x.shape)
+    print(sample_x)
+    print()
+    print(sample_y.shape)
+    print(sample_y)
+    print()
+data_loader = TVScriptGen.batch_data(int_text, params.seq_length, params.batch_size)
 tests.test_rnn(TVScriptGen.RNN, train_on_gpu)
 tests.test_forward_back_prop(TVScriptGen.RNN, TVScriptGen.forward_back_prop, train_on_gpu)
 vocab_size = len(vocab_to_int)
@@ -56,7 +54,7 @@ criterion = torch.nn.CrossEntropyLoss()
 # training the model
 trained_rnn = \
     TVScriptGen.train_rnn(rnn, params.batch_size, optimizer, criterion, params.num_epochs,
-                          data_loader_pack['train'], params.show_every_n_batches, train_on_gpu)
+                          data_loader, params.show_every_n_batches, train_on_gpu)
 # saving the trained model
 helper.save_model('./save/trained_rnn', trained_rnn)
 print('Model Trained and Saved')
