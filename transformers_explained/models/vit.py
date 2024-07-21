@@ -70,3 +70,4 @@ class VisionTransformerBackbone(nn.Module):
         out_tensor = self.transformer_encoder(out_tensor)
 
         return out_tensor
+    
