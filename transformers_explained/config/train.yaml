@@ -1,0 +1,2 @@
+defaults:
+  - model: cnn  # Options: cnn, resnet, vit
