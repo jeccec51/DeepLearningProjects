@@ -16,6 +16,8 @@ This repository contains code for training and evaluating deep learning models u
 
 ## Project Structure
 
+``` aurduino
+
 transformers_explained/
 ├── config/
 │ └── conf.yaml
@@ -32,6 +34,8 @@ transformers_explained/
 ├── train.py
 ├── README.md
 └── requirements.txt
+
+```
 
 ## Installation
 
