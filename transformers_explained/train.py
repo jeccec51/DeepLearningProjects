@@ -64,7 +64,7 @@ def evaluate(model: nn.Module, test_loader: DataLoader) -> float:
     print(f'Accuracy of the model on the test images: {accuracy:.2f}%')
     return accuracy
 
-@hydra.main(config_path="config", config_name="train")
+@hydra.main(config_path="config", config_name="conf")
 def main(config: DictConfig):
     """Main function to run the training, evaluation, and visualization.
 
