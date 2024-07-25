@@ -1,10 +1,13 @@
 defaults:
   - model: cnn  # Options: cnn, resnet, vit
 
-model_type: ${defaults.0}
-
 training:
   epochs: 10
   batch_size: 32
   learning_rate: 0.001
   dataset: "CIFAR10"  # Options: CIFAR10, other datasets
+  use_yuv: false  # Flag to use YUV color space instead of RGB
+
+layers:
+  classification_head:
+    fc1_out_features: 512

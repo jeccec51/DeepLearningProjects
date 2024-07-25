@@ -1,51 +1,46 @@
 """Generic Classification Module."""
 import torch
-from torch import nn
-from layers.classification_head  import ClassificationHead
+import torch.nn as nn
+from omegaconf import DictConfig
+from layers.classification_head import ClassificationHead
 from models.cnn import CNNBackbone
 from models.resnet import  get_resnet_back_bone
-from models.vit import  VisionTransformerBackbone
-from omegaconf import DictConfig
-
+from models.vit import VisionTransformerBackbone
 
 class GenericClassifier(nn.Module):
     """Generic classifier that combines a backbone with a classification head.
-
+    
     Args:
-        backbone: Feature extraction backbone.
-        num_classes: Number of classes for classification.
+        backbone: Backbone network
+        num_features: Number of features
+        num_classes: Number of classes
+        fc1_out_features: Number of out channels from first fully connected layer
     """
-    def __init__(self, backbone: nn.Module, num_classes: int):
-        """initialization routene."""
+
+    def __init__(self, backbone: nn.Module, num_features: int, num_classes: int,  fc1_out_features: int):
+        """Initialization routene. """
 
         super().__init__()
         self.backbone = backbone
-        if isinstance(backbone, CNNBackbone):
-            num_features = 32 * 56 * 56
-        elif isinstance(backbone, VisionTransformerBackbone):
-            num_features = backbone.patch_embedding.proj.out_channels
-        else:  # ResNet or similar
-            num_features = backbone[-1][-1].bn2.num_features
-        self.classifier = ClassificationHead(num_features, num_classes)
-        
+        self.classifier = ClassificationHead(num_features=num_features, num_classes=num_classes, fc1_out_features=fc1_out_features)
 
-    def forward(self, in_tensor: torch.Tensor) -> torch.Tensor:
+    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:
         """Forward pass of the classifier.
 
         Args:
-            in_tensor: Input tensor.
+            input_tensor: Input tensor.
 
         Returns:
             Output tensor with class probabilities.
         """
 
-        out_tensor = self.backbone(in_tensor)
+        features = self.backbone(input_tensor)
         if isinstance(self.backbone, CNNBackbone):
-            out_tensor = out_tensor.view(out_tensor.size(0), -1)
+            features = features.view(features.size(0), -1)
         else:  # ResNet or ViT
-            out_tensor = out_tensor.mean(dim=[2, 3])
-        out_tensor = self.classifier(out_tensor)
-        return out_tensor
+            features = features.mean(dim=[2, 3])
+        output = self.classifier(features)
+        return output
 
 def get_model(config: DictConfig) -> nn.Module:
     """Get the model based on the configuration.
@@ -56,20 +51,32 @@ def get_model(config: DictConfig) -> nn.Module:
     Returns:
         The model.
     """
-
+    
     model_type = config.model.name
+    fc1_out_features = config.layers.classification_head.fc1_out_features
     if model_type == 'cnn':
-        backbone = CNNBackbone()
+        backbone = CNNBackbone(
+            conv1_out_channels=config.model.conv1_out_channels,
+            conv2_out_channels=config.model.conv2_out_channels
+        )
+        num_features = config.model.conv2_out_channels * (config.model.img_size // 4) ** 2
+        num_classes = config.model.num_classes
     elif model_type == 'resnet':
         backbone = get_resnet_back_bone()
+        num_features = backbone[-1][-1].bn2.num_features
+        num_classes = config.model.num_classes
     elif model_type == 'vit':
-        backbone = VisionTransformerBackbone(img_size=config.model.img_size,
+        backbone = VisionTransformerBackbone(
+            img_size=config.model.img_size,
             patch_size=config.model.patch_size,
             emb_size=config.model.emb_size,
             depth=config.model.depth,
             num_heads=config.model.num_heads
         )
+        num_features = config.model.emb_size
+        num_classes = config.model.num_classes
     else:
         raise ValueError(f"Unknown model type: {model_type}")
 
-    return GenericClassifier(backbone, config.model.num_classes)
+    return GenericClassifier(backbone=backbone, num_features=num_features, 
+                             num_classes=num_classes, fc1_out_features=fc1_out_features)
