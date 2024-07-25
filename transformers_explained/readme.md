@@ -1,6 +1,6 @@
 # Transformers Explained
 
-This repository contains code for training and evaluating deep learning models using PyTorch, with support for CNN, ResNet, and Vision Transformer architectures. It also includes TensorBoard integration for comprehensive logging and monitoring of training and validation metrics.
+This repository contains code for training and evaluating deep learning models using PyTorch, with support for CNN, ResNet, and Vision Transformer architectures. It also includes TensorBoard integration for comprehensive logging and monitoring of training and validation metrics. The primary objective is how each of the different back bones contribute to feature extraction. 
 
 ## Table of Contents
 
@@ -18,9 +18,8 @@ This repository contains code for training and evaluating deep learning models u
 
 transformers_explained/
 ├── config/
-│ └── config.yaml
+│ └── conf.yaml
 ├── models/
-│ └── pytorch/
 │ ├── cnn.py
 │ ├── generic_model.py
 │ ├── resnet.py
