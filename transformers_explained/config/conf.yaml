@@ -7,7 +7,7 @@ training:
   learning_rate: 0.001
   dataset: "CIFAR10"  # Options: CIFAR10, other datasets
   use_yuv: false  # Flag to use YUV color space instead of RGB
-
+  log_dir: "./logs"  # Directory for TensorBoard logs
 layers:
   classification_head:
     fc1_out_features: 512
@@ -17,5 +17,3 @@ metrics:
   - "precision"
   - "recall"
   - "f1_score"
-
-log_dir: "./logs"  # Directory for TensorBoard logs

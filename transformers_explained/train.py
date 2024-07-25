@@ -1,5 +1,6 @@
 """The main module to train."""
 import hydra
+import os
 from omegaconf import DictConfig, OmegaConf
 import torch
 import torch.nn as nn
@@ -58,7 +59,8 @@ def train_pytorch(model: nn.Module, train_loader: DataLoader, val_loader: DataLo
     print('Finished Training')
 
 
-def evaluate_pytorch(model: nn.Module, loader: DataLoader, criterion: nn.Module, device: torch.device, metrics: list, step: int, prefix: str = "test") -> tuple:
+def evaluate_pytorch(model: nn.Module, loader: DataLoader, criterion: nn.Module, device: torch.device, 
+                     metrics: list, step: int, prefix: str = "test") -> tuple:
     """Evaluate the PyTorch model on the test/validation set.
 
     Args:
@@ -73,6 +75,7 @@ def evaluate_pytorch(model: nn.Module, loader: DataLoader, criterion: nn.Module,
     Returns:
         Tuple of total loss and dictionary of evaluated metrics.
     """
+
     model.to(device)
     model.eval()
     all_labels = []
@@ -105,7 +108,7 @@ def evaluate_pytorch(model: nn.Module, loader: DataLoader, criterion: nn.Module,
     return total_loss, results
 
 
-@hydra.main(config_path="config", config_name="config")
+@hydra.main(config_path="config", config_name="conf")
 def main(config: DictConfig) -> None:
     """Main function to run the training, evaluation, and visualization.
 
@@ -114,14 +117,18 @@ def main(config: DictConfig) -> None:
     """
 
     print(OmegaConf.to_yaml(config))
-
+    log_dir = os.path.abspath(config.training.log_dir)
     # Get data loaders
     train_loader, val_loader = get_data_loaders(dataset_name=config.training.dataset, 
-                                                img_size=config.model.cnn.img_size, batch_size=config.training.batch_size,
+                                                img_size=config.model.img_size, batch_size=config.training.batch_size,
                                                 use_yuv=config.training.use_yuv)
 
     # Determine device to use
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # Create log directory if it doesn't exist
+    if not os.path.exists(log_dir):
+        os.makedirs(config.training.log_dir)
 
     # Initialize TensorBoard writer
     writer = SummaryWriter(log_dir=config.training.log_dir)
@@ -136,12 +143,13 @@ def main(config: DictConfig) -> None:
     # Train the model
     print("Training the PyTorch model...")
     train_pytorch(model=model, train_loader=train_loader, val_loader=val_loader, criterion=criterion, optimizer=optimizer,
-                   epochs=config.training.epochs, device=device, writer=writer, metrics=config.training.metrics, log_interval=log_interval=200)
+                   epochs=config.training.epochs, device=device, writer=writer, metrics=config.metrics, log_interval=200)
 
     # Evaluate the model on test set
     print("Evaluating the PyTorch model on test set...")
     test_loader = val_loader  # Using val_loader as test_loader for simplicity
-    test_loss, test_metrics = evaluate_pytorch(model, test_loader, criterion, device, config.training.metrics, config.training.epochs * len(train_loader), prefix="test")
+    test_loss, test_metrics = evaluate_pytorch(model=model, test_loader=test_loader, criterion=criterion, device=device, metrics=config.metrics, 
+                                               step=config.training.epochs * len(train_loader), prefix="test")
 
     print(f"Test Evaluation Results: Loss: {test_loss:.3f}, Metrics: {test_metrics}")
 
