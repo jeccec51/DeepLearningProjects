@@ -28,7 +28,7 @@ transformers_explained/
 │ └── classification_head.py
 ├── utils/
 │ ├── data_loader.py
-│ └── visualization.py
+│ └── visualizations.py
 ├── train.py
 ├── README.md
 └── requirements.txt
