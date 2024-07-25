@@ -1,20 +1,7 @@
 defaults:
   - model: cnn  # Options: cnn, resnet, vit
 
-model:
-  cnn:
-    img_size: 224
-    num_classes: 10
-  resnet:
-    img_size: 224
-    num_classes: 10
-  vit:
-    img_size: 224
-    patch_size: 16
-    num_classes: 10
-    emb_size: 768
-    depth: 12
-    num_heads: 12
+model_type: ${defaults.0}
 
 training:
   epochs: 10

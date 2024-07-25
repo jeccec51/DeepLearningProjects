@@ -1,3 +1,4 @@
+    name: vit
     img_size: 224
     patch_size: 16
     num_classes: 10

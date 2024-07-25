@@ -5,13 +5,9 @@ import torch.nn.functional as F
 import torch 
 
 class CNNBackbone(nn.Module):
-    """A simple convloutional neural network class for calssification.
-
-    Args:
-        num_classes: Numbr of classes
-
-    """
-    def __init__(self, num_classes: int) -> None:
+    """A simple convloutional neural network class for calssification. """
+    
+    def __init__(self) -> None:
         """Initialization Routene."""
 
         super().__init__()

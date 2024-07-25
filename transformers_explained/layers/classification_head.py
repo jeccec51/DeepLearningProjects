@@ -26,6 +26,6 @@ class ClassificationHead(nn.Module):
             Output tensor with class probabilities.
         """
 
-        out_tensor = nn.functional.relu(self.bn1(self.fc1(x)))
+        out_tensor = nn.functional.relu(self.bn1(self.fc1(in_tensor)))
         out_tensor = self.fc2(out_tensor)
         return out_tensor

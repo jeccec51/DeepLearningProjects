@@ -57,7 +57,7 @@ def get_model(config: DictConfig) -> nn.Module:
         The model.
     """
 
-    model_type = config.model.type
+    model_type = config.model.name
     if model_type == 'cnn':
         backbone = CNNBackbone()
     elif model_type == 'resnet':
