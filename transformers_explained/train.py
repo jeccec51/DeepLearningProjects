@@ -12,6 +12,7 @@ from models.generic_model import get_model as get_pytorch_model
 from utils.data_loader import get_data_loaders
 from utils.visualizations import visualize_feature_maps, visualize_attention_maps
 
+
 def train_pytorch(model: nn.Module, train_loader: DataLoader, val_loader: DataLoader, criterion: nn.Module, 
                   optimizer: optim.Optimizer, epochs: int, device: torch.device, writer: SummaryWriter, metrics: list, log_interval: int) -> None:
     """Train the PyTorch model.
@@ -134,7 +135,8 @@ def main(config: DictConfig) -> None:
 
     # Train the model
     print("Training the PyTorch model...")
-    train_pytorch(model, train_loader, val_loader, criterion, optimizer, config.training.epochs, device, writer, config.training.metrics, log_interval=200)
+    train_pytorch(model=model, train_loader=train_loader, val_loader=val_loader, criterion=criterion, optimizer=optimizer,
+                   epochs=config.training.epochs, device=device, writer=writer, metrics=config.training.metrics, log_interval=log_interval=200)
 
     # Evaluate the model on test set
     print("Evaluating the PyTorch model on test set...")
