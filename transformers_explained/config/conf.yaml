@@ -11,3 +11,11 @@ training:
 layers:
   classification_head:
     fc1_out_features: 512
+
+metrics:
+  - "accuracy"
+  - "precision"
+  - "recall"
+  - "f1_score"
+
+log_dir: "./logs"  # Directory for TensorBoard logs
