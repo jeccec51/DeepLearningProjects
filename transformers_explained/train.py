@@ -148,7 +148,7 @@ def main(config: DictConfig) -> None:
     # Evaluate the model on test set
     print("Evaluating the PyTorch model on test set...")
     test_loader = val_loader  # Using val_loader as test_loader for simplicity
-    test_loss, test_metrics = evaluate_pytorch(model=model, test_loader=test_loader, criterion=criterion, device=device, metrics=config.metrics, 
+    test_loss, test_metrics = evaluate_pytorch(model=model, loader=test_loader, criterion=criterion, device=device, metrics=config.metrics, 
                                                step=config.training.epochs * len(train_loader), prefix="test")
 
     print(f"Test Evaluation Results: Loss: {test_loss:.3f}, Metrics: {test_metrics}")

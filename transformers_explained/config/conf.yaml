@@ -8,6 +8,8 @@ training:
   dataset: "CIFAR10"  # Options: CIFAR10, other datasets
   use_yuv: false  # Flag to use YUV color space instead of RGB
   log_dir: "./logs"  # Directory for TensorBoard logs
+  run_type: "short"  # Options: "short", "long"
+  short_run_fraction: 0.1  # Fraction of data to use for short run
 layers:
   classification_head:
     fc1_out_features: 512

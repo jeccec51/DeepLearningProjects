@@ -3,9 +3,11 @@
 from typing import Tuple
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
+import numpy as np
 
-def get_data_loaders(dataset_name: str, img_size: int, batch_size: int, use_yuv: bool) -> Tuple[DataLoader, DataLoader]:
+def get_data_loaders(dataset_name: str, img_size: int, batch_size: int, use_yuv: bool,
+                      run_type: str, short_run_fraction: float) -> Tuple[DataLoader, DataLoader]:
     """Get data loaders for the specified dataset.
 
     Args:
@@ -13,11 +15,13 @@ def get_data_loaders(dataset_name: str, img_size: int, batch_size: int, use_yuv:
         img_size: Size to resize the images to.
         batch_size: Batch size for the data loaders.
         use_yuv: Whether to use YUV color space instead of RGB.
+        run_type: Type of run, "short" or "long".
+        short_run_fraction: Fraction of data to use for a short run.
 
     Returns:
-        Train and test data loaders.
+        Tuple[DataLoader, DataLoader]: Train and test data loaders.
     """
-
+    
     if use_yuv:
         transform = transforms.Compose([
             transforms.Resize((img_size, img_size)),
@@ -37,6 +41,14 @@ def get_data_loaders(dataset_name: str, img_size: int, batch_size: int, use_yuv:
         test_dataset = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
     else:
         raise ValueError(f"Unknown dataset: {dataset_name}")
+
+    if run_type == 'short':
+        num_train_samples = int(len(train_dataset) * short_run_fraction)
+        num_test_samples = int(len(test_dataset) * short_run_fraction)
+        train_indices = np.random.choice(len(train_dataset), num_train_samples, replace=False)
+        test_indices = np.random.choice(len(test_dataset), num_test_samples, replace=False)
+        train_dataset = Subset(train_dataset, train_indices)
+        test_dataset = Subset(test_dataset, test_indices)
 
     train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
