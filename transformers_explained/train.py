@@ -160,9 +160,9 @@ def main(config: DictConfig) -> None:
 
     # Visualize the model
     print("Visualizing the model...")
-    if config.model_type == 'cnn':
+    if config.modesl.name == 'cnn':
         visualize_feature_maps(model, test_loader)
-    elif config.model_type == 'vit':
+    elif config.model.name == 'vit':
         visualize_attention_maps(model, test_loader)
 
     # Close the TensorBoard writer

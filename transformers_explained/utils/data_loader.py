@@ -5,9 +5,10 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from torch.utils.data import DataLoader, Subset
 import numpy as np
+import os
 
-def get_data_loaders(dataset_name: str, img_size: int, batch_size: int, use_yuv: bool,
-                      run_type: str, short_run_fraction: float, num_workers: int = 4) -> Tuple[DataLoader, DataLoader]:
+def get_data_loaders(dataset_name: str, img_size: int, batch_size: int, use_yuv: bool, 
+                     run_type: str, short_run_fraction: float, num_workers: int = 4) -> Tuple[DataLoader, DataLoader]:
     """Get data loaders for the specified dataset.
 
     Args:
@@ -17,11 +18,15 @@ def get_data_loaders(dataset_name: str, img_size: int, batch_size: int, use_yuv:
         use_yuv: Whether to use YUV color space instead of RGB.
         run_type: Type of run, "short" or "long".
         short_run_fraction: Fraction of data to use for a short run.
-        num_workers: Number of workers for dataloader
+        num_workers: Number of worker processes to use for data loading.
 
     Returns:
         Tuple[DataLoader, DataLoader]: Train and test data loaders.
     """
+    
+    data_root = './data'
+    if not os.path.exists(data_root):
+        os.makedirs(data_root)
 
     if use_yuv:
         transform = transforms.Compose([
@@ -37,9 +42,11 @@ def get_data_loaders(dataset_name: str, img_size: int, batch_size: int, use_yuv:
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
 
+    download = not os.path.exists(os.path.join(data_root, dataset_name, 'train'))  # Check if data already exists
+
     if dataset_name == 'CIFAR10':
-        train_dataset = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-        test_dataset = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+        train_dataset = datasets.CIFAR10(root=data_root, train=True, download=download, transform=transform)
+        test_dataset = datasets.CIFAR10(root=data_root, train=False, download=download, transform=transform)
     else:
         raise ValueError(f"Unknown dataset: {dataset_name}")
 
