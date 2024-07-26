@@ -119,9 +119,14 @@ def main(config: DictConfig) -> None:
     print(OmegaConf.to_yaml(config))
     log_dir = os.path.abspath(config.training.log_dir)
     # Get data loaders
-    train_loader, val_loader = get_data_loaders(dataset_name=config.training.dataset, 
-                                                img_size=config.model.img_size, batch_size=config.training.batch_size,
-                                                use_yuv=config.training.use_yuv)
+    train_loader, val_loader = get_data_loaders(
+        dataset_name=config.training.dataset, 
+        img_size=config.model.img_size, 
+        batch_size=config.training.batch_size, 
+        use_yuv=config.training.use_yuv, 
+        run_type=config.training.run_type, 
+        short_run_fraction=config.training.short_run_fraction
+    )
 
     # Determine device to use
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -143,7 +148,7 @@ def main(config: DictConfig) -> None:
     # Train the model
     print("Training the PyTorch model...")
     train_pytorch(model=model, train_loader=train_loader, val_loader=val_loader, criterion=criterion, optimizer=optimizer,
-                   epochs=config.training.epochs, device=device, writer=writer, metrics=config.metrics, log_interval=200)
+                   epochs=config.training.epochs, device=device, writer=writer, metrics=config.metrics, log_interval=10)
 
     # Evaluate the model on test set
     print("Evaluating the PyTorch model on test set...")
