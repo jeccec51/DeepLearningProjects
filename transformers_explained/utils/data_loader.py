@@ -23,7 +23,7 @@ def get_data_loaders(dataset_name: str, img_size: int, batch_size: int, use_yuv:
     Returns:
         Tuple[DataLoader, DataLoader]: Train and test data loaders.
     """
-    
+
     data_root = './data'
     if not os.path.exists(data_root):
         os.makedirs(data_root)
