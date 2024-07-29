@@ -1,8 +1,8 @@
 defaults:
-  - model: cnn  # Options: cnn, resnet, vit
+  - model: resnet  # Options: cnn, resnet, vit
 
 training:
-  epochs: 2
+  epochs: 1
   batch_size: 32
   learning_rate: 0.001
   dataset: "CIFAR10"  # Options: CIFAR10, other datasets

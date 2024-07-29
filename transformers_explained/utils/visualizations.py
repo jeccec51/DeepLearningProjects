@@ -4,14 +4,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+
+
 def visualize_feature_maps(model, loader):
-    """
-    Visualize feature maps of a model.
+    """Visualize feature maps of a model.
 
     Args:
         model: The trained model.
         loader: Data loader to fetch data from.
     """
+
     model.eval()
     dataiter = iter(loader)
     images, _ = next(dataiter)  # Fetch a batch of images
@@ -39,16 +44,16 @@ def visualize_feature_maps(model, loader):
 
     plt.suptitle('Feature Maps Visualization')
     plt.show()
-    
+
 
 def visualize_attention_maps(model, loader):
-    """
-    Visualize attention maps of a Vision Transformer model.
+    """Visualize attention maps of a Vision Transformer model.
 
     Args:
         model: The trained Vision Transformer model.
         loader: Data loader to fetch data from.
     """
+    
     model.eval()
     dataiter = iter(loader)
     images, _ = next(dataiter)  # Fetch a batch of images

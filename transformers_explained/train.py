@@ -160,7 +160,7 @@ def main(config: DictConfig) -> None:
 
     # Visualize the model
     print("Visualizing the model...")
-    if config.model.name == 'cnn':
+    if config.model.name == 'cnn' or config.model_type == 'resnet':
         visualize_feature_maps(model, test_loader)
     elif config.model.name == 'vit':
         visualize_attention_maps(model, test_loader)
