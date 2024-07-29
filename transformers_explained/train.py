@@ -97,7 +97,7 @@ def evaluate_pytorch(model: nn.Module, loader: DataLoader, criterion: nn.Module,
         accuracy = np.mean(np.array(all_labels) == np.array(all_predictions))
         results['accuracy'] = accuracy
     if 'precision' in metrics:
-        precision = precision_score(all_labels, all_predictions, average='macro')
+        precision = precision_score(all_labels, all_predictions, average='macro', zero_division=0)
         results['precision'] = precision
     if 'recall' in metrics:
         recall = recall_score(all_labels, all_predictions, average='macro')
@@ -160,7 +160,7 @@ def main(config: DictConfig) -> None:
 
     # Visualize the model
     print("Visualizing the model...")
-    if config.model.name == 'cnn' or config.model_type == 'resnet':
+    if config.model.name == 'cnn' or config.model.name == 'resnet':
         visualize_feature_maps(model, test_loader)
     elif config.model.name == 'vit':
         visualize_attention_maps(model, test_loader)
