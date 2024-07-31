@@ -1,16 +1,15 @@
 """Classification backbone using vit."""
-
-import torch 
-from torch import nn 
+import torch
+from torch import nn
 
 class PatchEmbedding(nn.Module):
     """Patch Embedding Layer for vision transformer.
     
-        Args: 
-            in_channels: Number of input channels
-            patch_size: Size of each patch
-            emb_size: Size of Embeddings
-            image_size: Size of the input images 
+    Args:
+        in_channels: Number of input channels.
+        patch_size: Size of each patch.
+        emb_size: Size of embeddings.
+        image_size: Size of the input images.
     """
 
     def __init__(self, in_channels: int, patch_size: int, emb_size: int, image_size: int) -> None:
@@ -22,19 +21,18 @@ class PatchEmbedding(nn.Module):
     def forward(self, in_tensor: torch.Tensor) -> torch.Tensor:
         """Forward Pass for the patch embedding layer.
         
-            Args:
-                in_tensor: Input Tensor
-            
-            Returns:
-                Output sensors with patches embedded 
+        Args:
+            in_tensor: Input tensor.
+        
+        Returns:
+            Output tensor with patches embedded.
         """
-
-        out_tensor = self.proj(in_tensor) # (B, E, H/P, W/P)
-        out_tensor = self.bn(out_tensor) 
-        out_tensor = out_tensor.flatten(2) # (B, E, N)
-        out_tensor = out_tensor.transpose(1, 2) # (B, N, E)
+        out_tensor = self.proj(in_tensor)  # (B, E, H/P, W/P)
+        out_tensor = self.bn(out_tensor)
+        out_tensor = out_tensor.flatten(2)  # (B, E, N)
+        out_tensor = out_tensor.transpose(1, 2)  # (B, N, E)
         return out_tensor
-    
+
 class VisionTransformerBackbone(nn.Module):
     """Vision Transformer Back Bone.
     
@@ -46,28 +44,24 @@ class VisionTransformerBackbone(nn.Module):
         num_heads: Number of attention heads in each transformer encoder layer.
     """
 
-    def __init__(self, image_size:int, patch_size: int, emb_size: int, depth: int, num_heads: int) -> None:
-        """Initialization Routene."""
-
+    def __init__(self, image_size: int, patch_size: int, emb_size: int, depth: int, num_heads: int) -> None:
+        """Initialization routine."""
         super().__init__()
         self.patch_embeddings = PatchEmbedding(in_channels=3, patch_size=patch_size, emb_size=emb_size, image_size=image_size)
-        self.positional_encoding = nn.Parameter(torch.zeros(1, (image_size//patch_size) ** 2, emb_size))
+        self.positional_encoding = nn.Parameter(torch.zeros(1, (image_size // patch_size) ** 2, emb_size))
         encoder_layer = nn.TransformerEncoderLayer(d_model=emb_size, nhead=num_heads)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer=encoder_layer, num_layers=depth)
     
-    def forward(self, in_tensor:torch.Tensor) -> torch.Tensor:
+    def forward(self, in_tensor: torch.Tensor) -> torch.Tensor:
         """Forward Pass for vision transformer back bone.
 
         Args:
-            in_tensor: Input Tensor
+            in_tensor: Input tensor.
         
         Returns: 
-            Output Tensor after passing through the network
-
+            Output tensor after passing through the network.
         """
-
         out_tensor = self.patch_embeddings(in_tensor) + self.positional_encoding
         out_tensor = self.transformer_encoder(out_tensor)
-
+        out_tensor = out_tensor.mean(dim=1)  # Global average pooling
         return out_tensor
-    

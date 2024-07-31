@@ -37,6 +37,8 @@ class GenericClassifier(nn.Module):
         features = self.backbone(input_tensor)
         if isinstance(self.backbone, CNNBackbone):
             features = features.view(features.size(0), -1)
+        elif isinstance(self.backbone, VisionTransformerBackbone):
+            pass # VIT is expected to return 2D tensor 
         else:  # ResNet or ViT
             features = features.mean(dim=[2, 3])
         output = self.classifier(features)
@@ -67,7 +69,7 @@ def get_model(config: DictConfig) -> nn.Module:
         num_classes = config.model.num_classes
     elif model_type == 'vit':
         backbone = VisionTransformerBackbone(
-            img_size=config.model.img_size,
+            image_size=config.model.img_size,
             patch_size=config.model.patch_size,
             emb_size=config.model.emb_size,
             depth=config.model.depth,
