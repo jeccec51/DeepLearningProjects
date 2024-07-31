@@ -4,10 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-import matplotlib.pyplot as plt
-import numpy as np
-import torch
-
 
 def visualize_feature_maps(model, loader):
     """Visualize feature maps of a model.
@@ -64,20 +60,18 @@ def visualize_attention_maps(model, loader):
     images = images.to(device)
 
     with torch.no_grad():
-        attentions = model.backbone.get_attention_map(images)
+        _ = model.backbone(images)
+        attentions = model.backbone.get_attention_map()
 
     # Plot attention maps
-    fig, axes = plt.subplots(len(images), 2, figsize=(10, 10))
+    fig, axes = plt.subplots(len(images), len(attentions[0]), figsize=(15, 10))
     for i, img in enumerate(images):
-        axes[i, 0].imshow(img.cpu().permute(1, 2, 0))  # Original image
-        axes[i, 0].axis('off')
-        axes[i, 0].set_title(f'Original Image {i+1}')
-
-        attention_map = attentions[i].cpu().numpy()
-        attention_map = np.mean(attention_map, axis=0)  # Average over all heads
-        axes[i, 1].imshow(attention_map, cmap='viridis')  # Attention map
-        axes[i, 1].axis('off')
-        axes[i, 1].set_title(f'Attention Map {i+1}')
+        for j, attention in enumerate(attentions[0]):
+            axes[i, j].imshow(img.cpu().permute(1, 2, 0))  # Original image
+            axes[i, j].imshow(np.mean(attention[i], axis=0), cmap='viridis', alpha=0.6)  # Attention map overlay
+            axes[i, j].axis('off')
+            if i == 0:
+                axes[i, j].set_title(f'Head {j+1}')
 
     plt.suptitle('Attention Maps Visualization')
     plt.show()

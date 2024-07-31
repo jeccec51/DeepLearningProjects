@@ -74,7 +74,7 @@ def get_model(config: DictConfig) -> nn.Module:
             emb_size=config.model.emb_size,
             depth=config.model.depth,
             num_heads=config.model.num_heads,
-            drop_out_rate=config.model.drop_out_rate
+            dropout_rate=config.model.drop_out_rate
         )
         num_features = config.model.emb_size
         num_classes = config.model.num_classes
