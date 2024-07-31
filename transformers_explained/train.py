@@ -15,7 +15,8 @@ from utils.visualizations import visualize_feature_maps, visualize_attention_map
 
 
 def train_pytorch(model: nn.Module, train_loader: DataLoader, val_loader: DataLoader, criterion: nn.Module, 
-                  optimizer: optim.Optimizer, epochs: int, device: torch.device, writer: SummaryWriter, metrics: list, log_interval: int) -> None:
+                  optimizer: optim.Optimizer, scheduler: optim.lr_scheduler._LRScheduler, 
+                  epochs: int, device: torch.device, writer: SummaryWriter, metrics: list, log_interval: int) -> None:
     """Train the PyTorch model.
 
     Args:
@@ -24,6 +25,7 @@ def train_pytorch(model: nn.Module, train_loader: DataLoader, val_loader: DataLo
         val_loader: Data loader for the validation data.
         criterion: Loss function.
         optimizer: Optimizer.
+        scheduler: Lr Scheduler
         epochs: Number of epochs to train for.
         device: Device to use for training (CPU or GPU).
         writer: TensorBoard SummaryWriter for logging.
@@ -55,6 +57,7 @@ def train_pytorch(model: nn.Module, train_loader: DataLoader, val_loader: DataLo
                 writer.add_scalar('validation_loss', val_loss, epoch * len(train_loader) + batch_idx)
                 for metric, value in val_metrics.items():
                     writer.add_scalar(f'validation_{metric}', value, epoch * len(train_loader) + batch_idx)
+        scheduler.step()
 
     print('Finished Training')
 
@@ -144,11 +147,13 @@ def main(config: DictConfig) -> None:
     # Define loss function and optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=config.training.learning_rate)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.training.epochs)
 
     # Train the model
     print("Training the PyTorch model...")
     train_pytorch(model=model, train_loader=train_loader, val_loader=val_loader, criterion=criterion, optimizer=optimizer,
-                   epochs=config.training.epochs, device=device, writer=writer, metrics=config.metrics, log_interval=10)
+                   epochs=config.training.epochs, device=device, writer=writer, metrics=config.metrics,
+                    scheduler=scheduler, log_interval=10)
 
     # Evaluate the model on test set
     print("Evaluating the PyTorch model on test set...")

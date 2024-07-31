@@ -44,13 +44,14 @@ class VisionTransformerBackbone(nn.Module):
         num_heads: Number of attention heads in each transformer encoder layer.
     """
 
-    def __init__(self, image_size: int, patch_size: int, emb_size: int, depth: int, num_heads: int) -> None:
+    def __init__(self, image_size: int, patch_size: int, emb_size: int, depth: int, num_heads: int, drop_out_rate: float = 0.1) -> None:
         """Initialization routine."""
         super().__init__()
         self.patch_embeddings = PatchEmbedding(in_channels=3, patch_size=patch_size, emb_size=emb_size, image_size=image_size)
         self.positional_encoding = nn.Parameter(torch.zeros(1, (image_size // patch_size) ** 2, emb_size))
         encoder_layer = nn.TransformerEncoderLayer(d_model=emb_size, nhead=num_heads)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer=encoder_layer, num_layers=depth)
+        self.dropout = nn.Dropout(drop_out_rate)
     
     def forward(self, in_tensor: torch.Tensor) -> torch.Tensor:
         """Forward Pass for vision transformer back bone.
@@ -64,4 +65,5 @@ class VisionTransformerBackbone(nn.Module):
         out_tensor = self.patch_embeddings(in_tensor) + self.positional_encoding
         out_tensor = self.transformer_encoder(out_tensor)
         out_tensor = out_tensor.mean(dim=1)  # Global average pooling
+        out_tensor = self.dropout(out_tensor)
         return out_tensor
