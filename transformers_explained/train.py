@@ -153,7 +153,7 @@ def main(config: DictConfig) -> None:
     print("Training the PyTorch model...")
     train_pytorch(model=model, train_loader=train_loader, val_loader=val_loader, criterion=criterion, optimizer=optimizer,
                    epochs=config.training.epochs, device=device, writer=writer, metrics=config.metrics,
-                    scheduler=scheduler, log_interval=10)
+                    scheduler=scheduler, log_interval=150)
 
     # Evaluate the model on test set
     print("Evaluating the PyTorch model on test set...")
