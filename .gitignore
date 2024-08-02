@@ -1,4 +1,7 @@
 transformers_explained/utils/__pycache__/
 transformers_explained/models/__pycache__/
 transformers_explained/layers/__pycache__/
+transformers_explained/tests/__pycache__/
+
 outputs/
+data/

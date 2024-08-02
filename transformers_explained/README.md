@@ -11,6 +11,7 @@ This repository contains code for training and evaluating deep learning models u
   - [Configuration](#configuration)
   - [Training and Evaluation](#training-and-evaluation)
   - [TensorBoard](#tensorboard)
+  - [UnitTests](#unittests)
   - [Usage Example](#usage-example)
   - [Acknowledgements](#acknowledgements)
 
@@ -20,20 +21,26 @@ This repository contains code for training and evaluating deep learning models u
 
 transformers_explained/
 ├── config/
-│ └── conf.yaml
-├── models/
-│ ├── cnn.py
-│ ├── generic_model.py
-│ ├── resnet.py
-│ └── vit.py
+│   └── config.yaml
 ├── layers/
-│ └── classification_head.py
-├── utils/
-│ ├── data_loader.py
-│ └── visualizations.py
+│   └── classification_head.py
+├── models/
+│   ├── cnn.py
+│   ├── generic_model.py
+│   ├── resnet.py
+│   └── vit.py
 ├── train.py
-├── README.md
-└── requirements.txt
+├── utils/
+│   ├── data_loader.py
+│   └── visualizations.py
+├── tests/
+│   ├── test_data_loader.py
+│   ├── test_generic_model.py
+│   ├── test_vit.py
+│   └── __init__.py
+├── requirements.txt
+└── README.md
+
 
 ```
 
@@ -87,6 +94,14 @@ tensorboard --logdir=./logs
 ```
 
 Then open your web browser and go to http://localhost:6006/ to view the TensorBoard dashboard.
+
+## UnitTests
+
+Unit tests are provided to ensure the correctness of the data loader, models, and the overall training pipeline. To run the unit tests, use pytest:
+
+```bash
+python -m pytest tests/
+```
 
 ## Usage Example
 
