@@ -85,6 +85,11 @@ if __name__ == "__main__":
     feature_maps = [
         torch.randn(1, 64, 56, 56),
         torch.randn(1, 128, 28, 28),
-       ```python
-        torch.randn
-
+        torch.randn(1, 256, 14, 14),
+        torch.randn(1, 512, 7, 7),
+        torch.randn(1, 1024, 4, 4)
+    ]
+    bifpn = BiFPN(in_channels=64, out_channels=128)
+    output_maps = bifpn(feature_maps)
+    for i, feature_map in enumerate(output_maps):
+        print(f"Output feature map {i} shape: {feature_map.shape}")
