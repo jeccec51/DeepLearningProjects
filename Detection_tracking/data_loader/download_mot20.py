@@ -3,9 +3,11 @@
 import os
 import requests
 import zipfile
+from tqdm import tqdm
+
 
 def download_file(url, destination) -> None:
-    """Download a file from a URL.
+    """Download a file from a URL with a progress bar.
     
     Args:
         url: URL of the file to download.
@@ -13,10 +15,33 @@ def download_file(url, destination) -> None:
     """
 
     response = requests.get(url, stream=True)
-    with open(destination, 'wb') as f:
-        for chunk in response.iter_content(chunk_size=1024):
-            if chunk:
-                f.write(chunk)
+    total_size = int(response.headers.get('content-length', 0))
+    block_size = 1024  # 1 Kilobyte
+
+    with open(destination, 'wb') as f, tqdm(
+        total=total_size, unit='iB', unit_scale=True, desc="Downloading", 
+        unit_divisor=1024, leave=True
+    ) as bar:
+        for chunk in response.iter_content(block_size):
+            bar.update(len(chunk))
+            f.write(chunk)
+
+
+def extract_file(zip_path: str, dest_dir: str) -> None:
+    """Extract a zip file with a progress bar.
+    
+    Args:
+        zip_path: Path to the zip file.
+        dest_dir: Directory to extract the contents.
+    """
+
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        total_files = len(zip_ref.infolist())
+        with tqdm(total=total_files, unit='file', desc="Extracting") as bar:
+            for file in zip_ref.infolist():
+                zip_ref.extract(file, dest_dir)
+                bar.update(1)
+
 
 def download_and_extract_mot20(dest_dir: str) -> None:
     """Download and extract the MOT20 dataset.
@@ -30,13 +55,10 @@ def download_and_extract_mot20(dest_dir: str) -> None:
     zip_path = os.path.join(dest_dir, 'MOT20.zip')
 
     # Download the dataset
-    print("Downloading MOT20 dataset...")
     download_file(mot20_train_url, zip_path)
 
     # Extract the dataset
-    print("Extracting dataset...")
-    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        zip_ref.extractall(dest_dir)
+    extract_file(zip_path, dest_dir)
 
     # Remove the zip file
     os.remove(zip_path)
