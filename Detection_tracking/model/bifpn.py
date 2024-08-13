@@ -13,7 +13,7 @@ class BiFPN(nn.Module):
             out_channels: Number of output channels for the fused feature maps.
         """
 
-        super(BiFPN, self).__init__()
+        super().__init__()
 
         # Convolution layers for fusing features at different levels
         self.conv3_to_4 = nn.Conv2d(in_channels, out_channels, kernel_size=1)
