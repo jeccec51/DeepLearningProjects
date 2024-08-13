@@ -1,0 +1,6 @@
+model:
+  num_classes: 80
+  hidden_size: 512
+  num_layers: 2
+  backbone: "efficientnet_b0"
+  bifpn_out_channels: 64

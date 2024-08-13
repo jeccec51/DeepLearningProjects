@@ -1,0 +1,6 @@
+train:
+  num_epochs: 10
+  learning_rate: 0.001
+  optimizer: "adam"
+  loss_fn_cls: "cross_entropy"
+  loss_fn_reg: "smooth_l1"

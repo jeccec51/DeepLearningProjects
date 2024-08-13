@@ -1,0 +1,4 @@
+defaults:
+  - model: model
+  - data_loader: data_loader
+  - train: train
