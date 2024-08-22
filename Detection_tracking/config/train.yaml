@@ -4,3 +4,5 @@ train:
   optimizer: "adam"
   loss_fn_cls: "cross_entropy"
   loss_fn_reg: "smooth_l1"
+  checkpoint_dir: "./checkpoints"
+  log_interval: 10

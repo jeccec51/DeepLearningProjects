@@ -1,0 +1,6 @@
+data_loader:
+  video_dir: "./data/MOT20/train"
+  annotation_dir: "./data/MOT20/train/annotations"
+  batch_size: 4
+  seq_len: 8
+  num_workers: 4

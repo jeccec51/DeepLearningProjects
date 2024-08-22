@@ -26,13 +26,14 @@ def create_data_loaders(video_dir: str, annotation_dir: str, batch_size: int = 4
     Returns:
         Data loaders for training, validation, and testing.
     """
-    
+
     dataset = MOTDataset(video_dir, annotation_dir, transform=transform, seq_len=seq_len)
     
     # Split the dataset into training, validation, and testing sets
     train_size = int(0.7 * len(dataset))
     val_size = int(0.2 * len(dataset))
     test_size = len(dataset) - train_size - val_size
+   
     train_dataset, val_dataset, test_dataset = random_split(dataset, [train_size, val_size, test_size])
     
     # Create data loaders
