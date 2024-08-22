@@ -8,184 +8,101 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 from model.combined_model import ObjectDetectionAndTrackingModel
 from data_loader import create_data_loaders
-from typing import Tuple
+from typing import Tuple, List
 
 
-def train_one_epoch(
-    model: torch.nn.Module,
-    train_loader: torch.utils.data.DataLoader,
-    optimizer: torch.optim.Optimizer,
-    criterion_cls: torch.nn.Module,
-    criterion_reg: torch.nn.Module,
-    device: torch.device,
-    epoch: int,
-    cfg: DictConfig,
-    writer: SummaryWriter
-) -> float:
-    """Trains the model for one epoch.
+def calculate_metrics(
+    outputs: torch.Tensor,
+    annotations: List[torch.Tensor],
+    num_classes: int,
+    device: torch.device
+) -> Tuple[float, float]:
+    """Calculates accuracy and mean absolute error (MAE).
 
     Args:
-        model: The model to be trained.
-        train_loader: DataLoader for the training dataset.
-        optimizer: The optimizer used for training.
-        criterion_cls: The classification loss function.
-        criterion_reg: The regression loss function.
-        device: The device on which to perform the training (CPU or GPU).
-        epoch: The current epoch number.
-        cfg: The configuration dictionary.
-        writer: The TensorBoard writer for logging metrics.
+        outputs: The model outputs.
+        annotations: The ground truth annotations.
+        num_classes: The number of classes in the model.
+        device: The device on which the calculations are performed.
 
     Returns:
-        The average training loss for this epoch.
+        A tuple containing accuracy and mean absolute error.
     """
 
-    model.train()
-    train_loss = 0.0
-    correct_preds = 0
-    total_preds = 0
-    mae = 0.0
-    for batch_idx, (frames, annotations) in enumerate(train_loader):
-        frames, annotations = frames.to(device), [ann.to(device) for ann in annotations]
-        optimizer.zero_grad()
-        outputs = model(frames)
-        loss_cls = criterion_cls(outputs[:, :cfg.model.num_classes], torch.tensor([ann[0] for ann in annotations], device=device))
-        loss_reg = criterion_reg(outputs[:, cfg.model.num_classes:], torch.tensor([ann[1:] for ann in annotations], device=device))
-        loss = loss_cls + loss_reg
-        loss.backward()
-        optimizer.step()
-        train_loss += loss.item()
+    # Calculate accuracy
+    _, predicted = torch.max(outputs[:, :num_classes], 1)
+    correct_preds = (predicted == torch.tensor([ann[0] for ann in annotations], device=device)).sum().item()
+    total_preds = len(annotations)
 
-        # Calculate accuracy
-        _, predicted = torch.max(outputs[:, :cfg.model.num_classes], 1)
-        correct_preds += (predicted == torch.tensor([ann[0] for ann in annotations], device=device)).sum().item()
-        total_preds += len(annotations)
+    # Calculate mean absolute error (MAE)
+    mae = torch.abs(outputs[:, num_classes:] - torch.tensor([ann[1:] for ann in annotations], device=device)).sum().item()
 
-        # Calculate mean absolute error (MAE)
-        mae += torch.abs(outputs[:, cfg.model.num_classes:] - torch.tensor([ann[1:] for ann in annotations], device=device)).sum().item()
-
-    train_loss /= len(train_loader)
     accuracy = correct_preds / total_preds
     mae /= total_preds
 
-    writer.add_scalar("Loss/train", train_loss, epoch)
-    writer.add_scalar("Accuracy/train", accuracy, epoch)
-    writer.add_scalar("MAE/train", mae, epoch)
-
-    print(f"Epoch {epoch+1}/{cfg.train.num_epochs}, Train Loss: {train_loss:.4f}, Train Accuracy: {accuracy:.4f}, Train MAE: {mae:.4f}")
-
-    return train_loss
+    return accuracy, mae
 
 
-def validate_model(
+def run_model_phase(
     model: torch.nn.Module,
-    val_loader: torch.utils.data.DataLoader,
+    data_loader: torch.utils.data.DataLoader,
     criterion_cls: torch.nn.Module,
     criterion_reg: torch.nn.Module,
     device: torch.device,
-    epoch: int,
-    cfg: DictConfig,
-    writer: SummaryWriter
+    num_classes: int,
+    is_training: bool = False,
+    optimizer: torch.optim.Optimizer = None
 ) -> Tuple[float, float, float]:
-    """Validates the model on the validation dataset.
+    """Runs a single phase (training/validation/testing) of the model.
 
     Args:
-        model: The model to be validated.
-        val_loader: DataLoader for the validation dataset.
+        model: The model to be run.
+        data_loader: DataLoader for the dataset.
         criterion_cls: The classification loss function.
         criterion_reg: The regression loss function.
-        device: The device on which to perform the validation (CPU or GPU).
-        epoch: The current epoch number.
-        cfg: The configuration dictionary.
-        writer: The TensorBoard writer for logging metrics.
+        device: The device on which to perform the phase (CPU or GPU).
+        num_classes: The number of classes in the model.
+        is_training: Whether this is a training phase (default: False).
+        optimizer: The optimizer used for training (only needed for training).
 
     Returns:
-        The average validation loss, validation accuracy, and validation MAE.
+        The average loss, accuracy, and MAE for this phase.
     """
-    model.eval()
-    val_loss = 0.0
-    val_correct_preds = 0
-    val_total_preds = 0
-    val_mae = 0.0
-    with torch.no_grad():
-        for frames, annotations in val_loader:
-            frames, annotations = frames.to(device), [ann.to(device) for ann in annotations]
-            outputs = model(frames)
-            loss_cls = criterion_cls(outputs[:, :cfg.model.num_classes], torch.tensor([ann[0] for ann in annotations], device=device))
-            loss_reg = criterion_reg(outputs[:, cfg.model.num_classes:], torch.tensor([ann[1:] for ann in annotations], device=device))
-            loss = loss_cls + loss_reg
-            val_loss += loss.item()
 
-            # Calculate accuracy
-            _, predicted = torch.max(outputs[:, :cfg.model.num_classes], 1)
-            val_correct_preds += (predicted == torch.tensor([ann[0] for ann in annotations], device=device)).sum().item()
-            val_total_preds += len(annotations)
+    if is_training:
+        model.train()
+    else:
+        model.eval()
 
-            # Calculate mean absolute error (MAE)
-            val_mae += torch.abs(outputs[:, cfg.model.num_classes:] - torch.tensor([ann[1:] for ann in annotations], device=device)).sum().item()
+    total_loss = 0.0
+    total_accuracy = 0.0
+    total_mae = 0.0
 
-    val_loss /= len(val_loader)
-    val_accuracy = val_correct_preds / val_total_preds
-    val_mae /= val_total_preds
+    for frames, annotations in data_loader:
+        frames, annotations = frames.to(device), [ann.to(device) for ann in annotations]
 
-    writer.add_scalar("Loss/val", val_loss, epoch)
-    writer.add_scalar("Accuracy/val", val_accuracy, epoch)
-    writer.add_scalar("MAE/val", val_mae, epoch)
+        if is_training:
+            optimizer.zero_grad()
 
-    print(f"Epoch {epoch+1}/{cfg.train.num_epochs}, Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f}, Validation MAE: {val_mae:.4f}")
+        outputs = model(frames)
+        loss_cls = criterion_cls(outputs[:, :num_classes], torch.tensor([ann[0] for ann in annotations], device=device))
+        loss_reg = criterion_reg(outputs[:, num_classes:], torch.tensor([ann[1:] for ann in annotations], device=device))
+        loss = loss_cls + loss_reg
 
-    return val_loss, val_accuracy, val_mae
+        if is_training:
+            loss.backward()
+            optimizer.step()
 
+        total_loss += loss.item()
+        accuracy, mae = calculate_metrics(outputs, annotations, num_classes, device)
+        total_accuracy += accuracy
+        total_mae += mae
 
-def test_model(
-    model: torch.nn.Module,
-    test_loader: torch.utils.data.DataLoader,
-    criterion_cls: torch.nn.Module,
-    criterion_reg: torch.nn.Module,
-    device: torch.device,
-    cfg: DictConfig
-) -> Tuple[float, float, float]:
-    """Tests the model on the test dataset.
+    total_loss /= len(data_loader)
+    total_accuracy /= len(data_loader)
+    total_mae /= len(data_loader)
 
-    Args:
-        model: The trained model to be tested.
-        test_loader: DataLoader for the test dataset.
-        criterion_cls: The classification loss function.
-        criterion_reg: The regression loss function.
-        device: The device on which to perform the testing (CPU or GPU).
-        cfg: The configuration dictionary.
-
-    Returns:
-        The average test loss, test accuracy, and test MAE.
-    """
-    model.eval()
-    test_loss = 0.0
-    test_correct_preds = 0
-    test_total_preds = 0
-    test_mae = 0.0
-    with torch.no_grad():
-        for frames, annotations in test_loader:
-            frames, annotations = frames.to(device), [ann.to(device) for ann in annotations]
-            outputs = model(frames)
-            loss_cls = criterion_cls(outputs[:, :cfg.model.num_classes], torch.tensor([ann[0] for ann in annotations], device=device))
-            loss_reg = criterion_reg(outputs[:, cfg.model.num_classes:], torch.tensor([ann[1:] for ann in annotations], device=device))
-            loss = loss_cls + loss_reg
-            test_loss += loss.item()
-
-            # Calculate accuracy
-            _, predicted = torch.max(outputs[:, :cfg.model.num_classes], 1)
-            test_correct_preds += (predicted == torch.tensor([ann[0] for ann in annotations], device=device)).sum().item()
-            test_total_preds += len(annotations)
-
-            # Calculate mean absolute error (MAE)
-            test_mae += torch.abs(outputs[:, cfg.model.num_classes:] - torch.tensor([ann[1:] for ann in annotations], device=device)).sum().item()
-
-    test_loss /= len(test_loader)
-    test_accuracy = test_correct_preds / test_total_preds
-    test_mae /= test_total_preds
-
-    print(f"Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}, Test MAE: {test_mae:.4f}")
-
-    return test_loss, test_accuracy, test_mae
+    return total_loss, total_accuracy, total_mae
 
 
 @hydra.main(version_base=None, config_path="../config", config_name="config")
@@ -195,6 +112,7 @@ def main(cfg: DictConfig):
     Args:
         cfg (DictConfig): Configuration composed by Hydra.
     """
+    
     # Set up device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -247,28 +165,37 @@ def main(cfg: DictConfig):
 
     # Training loop across epochs
     for epoch in range(train_cfg.num_epochs):
-        train_loss = train_one_epoch(
+        train_loss, train_accuracy, train_mae = run_model_phase(
             model=model,
-            train_loader=train_loader,
-            optimizer=optimizer,
+            data_loader=train_loader,
             criterion_cls=criterion_cls,
             criterion_reg=criterion_reg,
             device=device,
-            epoch=epoch,
-            cfg=cfg,
-            writer=writer
+            num_classes=model_cfg.num_classes,
+            is_training=True,
+            optimizer=optimizer
         )
 
-        val_loss, val_accuracy, val_mae = validate_model(
+        writer.add_scalar("Loss/train", train_loss, epoch)
+        writer.add_scalar("Accuracy/train", train_accuracy, epoch)
+        writer.add_scalar("MAE/train", train_mae, epoch)
+
+        val_loss, val_accuracy, val_mae = run_model_phase(
             model=model,
-            val_loader=val_loader,
+            data_loader=val_loader,
             criterion_cls=criterion_cls,
             criterion_reg=criterion_reg,
             device=device,
-            epoch=epoch,
-            cfg=cfg,
-            writer=writer
+            num_classes=model_cfg.num_classes,
+            is_training=False
         )
+
+        writer.add_scalar("Loss/val", val_loss, epoch)
+        writer.add_scalar("Accuracy/val", val_accuracy, epoch)
+        writer.add_scalar("MAE/val", val_mae, epoch)
+
+        print(f"Epoch {epoch+1}/{train_cfg.num_epochs}, Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.4f}, Train MAE: {train_mae:.4f}, "
+              f"Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f}, Validation MAE: {val_mae:.4f}")
 
         # Save checkpoint
         if not os.path.exists(train_cfg.checkpoint_dir):
@@ -279,15 +206,18 @@ def main(cfg: DictConfig):
     writer.close()
 
     # Testing phase
-    test_loss, test_accuracy, test_mae = test_model(
+    test_loss, test_accuracy, test_mae = run_model_phase(
         model=model,
-        test_loader=test_loader,
+        data_loader=test_loader,
         criterion_cls=criterion_cls,
         criterion_reg=criterion_reg,
         device=device,
-        cfg=cfg
+        num_classes=model_cfg.num_classes,
+        is_training=False
     )
+
+    print(f"Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}, Test MAE: {test_mae:.4f}")
+
 
 if __name__ == "__main__":
     main()
-
