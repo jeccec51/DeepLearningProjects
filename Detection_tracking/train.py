@@ -117,13 +117,13 @@ def main(cfg: DictConfig):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Load the model configuration
-    model_cfg = cfg.model
+    model_cfg = cfg.model.model
     
     # Load data loader configuration
-    data_loader_cfg = cfg.data_loader
+    data_loader_cfg = cfg.data_loader.data_loader
     
     # Load training configuration
-    train_cfg = cfg.train
+    train_cfg = cfg.train.train
 
     # Create data loaders
     train_loader, val_loader, test_loader = create_data_loaders(
