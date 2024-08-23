@@ -1,4 +1,4 @@
 defaults:
-  - model: model
-  - data_loader: data_loader
-  - train: train
+  - model: model_det
+  - data_loader: mot_20
+  - train: train_tracking

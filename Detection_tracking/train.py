@@ -7,7 +7,7 @@ import torch
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 from model.combined_model import ObjectDetectionAndTrackingModel
-from data_loader import create_data_loaders
+from data_loader.data_loader import create_data_loaders
 from typing import Tuple, List
 
 
@@ -105,14 +105,14 @@ def run_model_phase(
     return total_loss, total_accuracy, total_mae
 
 
-@hydra.main(version_base=None, config_path="../config", config_name="config")
+@hydra.main(version_base=None, config_path="config", config_name="config")
 def main(cfg: DictConfig):
     """Main function for training the object detection and tracking model.
     
     Args:
-        cfg (DictConfig): Configuration composed by Hydra.
+        cfg: Configuration composed by Hydra.
     """
-    
+
     # Set up device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
