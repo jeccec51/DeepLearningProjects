@@ -137,3 +137,4 @@ def plot_spatial_distribution(dataset: MOTDataset) -> None:
     plt.ylabel("Y Coordinate")
     plt.gca().invert_yaxis()
     plt.show()
+

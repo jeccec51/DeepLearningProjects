@@ -11,7 +11,7 @@ from visualize.visualize_data import (
     plot_spatial_distribution
 )
 
-@hydra.main(version_base=None, config_path="../config", config_name="config")
+@hydra.main(version_base=None, config_path="config", config_name="config")
 def main(cfg: DictConfig):
     """Main function for visualizing data samples and distributions.
 
