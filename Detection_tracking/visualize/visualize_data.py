@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from typing import List, Tuple
 from data_loader.mot_dataset import MOTDataset
+from tqdm import tqdm
 
 
 def visualize_single_frame(image_path: str, bounding_boxes: List[Tuple[float, float, float, float]]) -> None:
@@ -69,23 +70,25 @@ def visualize_frame_sequence(dataset: MOTDataset, sequence_index: int = 0, num_f
         plt.show()
 
 
-def plot_annotation_distribution(dataset: MOTDataset) -> None:
-    """Plots the distribution of bounding box sizes and locations across the dataset.
+def plot_annotation_distribution(dataset):
+    """Plots the distribution of bounding box sizes and locations across the dataset."""
     
-    Args:
-        dataset: The dataset object containing annotations.
-    """
     bounding_box_widths = []
     bounding_box_heights = []
     aspect_ratios = []
-    for sample_index in range(len(dataset)):
-        _, annotations = dataset[sample_index]
-        for bounding_boxes in annotations:
-            for box in bounding_boxes:
+    
+    # Use tqdm to create a progress bar
+    for sample_index in tqdm(range(len(dataset)), desc="Processing bounding boxes"):
+        _, annotations = dataset[sample_index]  # Get the annotations directly
+        for box in annotations:
+            if isinstance(box, tuple) and len(box) == 4:
                 x_min, y_min, width, height = box
                 bounding_box_widths.append(width)
                 bounding_box_heights.append(height)
                 aspect_ratios.append(width / height)
+            else:
+                print(f"Unexpected format in bounding box: {box}")
+                raise ValueError("Bounding box is not in the expected format of (x_min, y_min, width, height).")
 
     plt.figure(figsize=(14, 6))
 
@@ -109,6 +112,7 @@ def plot_annotation_distribution(dataset: MOTDataset) -> None:
 
     plt.tight_layout()
     plt.show()
+
 
 
 def plot_spatial_distribution(dataset: MOTDataset) -> None:

@@ -7,27 +7,34 @@ from torch.utils.data import Dataset
 from typing import List, Tuple
 
 class MOTDataset(Dataset):
-    """Mot Data set Class.
+    """
+    MOTDataset class for loading frames and their corresponding annotations
+    from the MOT20 dataset.
 
-        Args:
-            video_dir: Path to the directory containing video frames (img1 folders).
-            annotation_dir: Path to the directory containing annotations (det or gt folders).
-            sequence: Specify whether to use 'train' or 'test' sequences.
-            transform: Transformations to be applied to the frames.        
+    Args:
+        video_dir: Path to the directory containing video frames (img1 folders).
+        annotation_dir: Path to the directory containing annotations (gt or det folders).
+        sequence: Specify whether to use 'train' or 'test' sequences.
+        use_gt: Whether to use ground truth (gt) or detection results (det) for annotations.
+        transform: Transformations to be applied to the frames.
     """
     
-    def __init__(self, video_dir: str, annotation_dir: str, sequence: str = 'train', transform=None):
-        """Initializes the MOTDataset. """
-
+    def __init__(self, video_dir: str, annotation_dir: str, sequence: str = 'train', use_gt: bool = True, transform=None):
+        """Initializes the MOTDataset."""
         
-        self.video_dir = os.path.join(video_dir, 'MOT20', sequence)
-        self.annotation_dir = os.path.join(annotation_dir, 'MOT20', sequence)
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', video_dir))
+        self.video_dir = os.path.join(base_dir, 'MOT20', sequence)
+        self.annotation_dir = self.video_dir
         self.transform = transform
+        self.use_gt = use_gt
+        self.ann_folder = 'gt' if use_gt else 'det'
 
         self.sequences = [seq for seq in os.listdir(self.video_dir) if os.path.isdir(os.path.join(self.video_dir, seq))]
 
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """Returns the total number of frames across all sequences."""
+
         return sum([len(os.listdir(os.path.join(self.video_dir, seq, 'img1'))) for seq in self.sequences])
 
 
@@ -35,12 +42,12 @@ class MOTDataset(Dataset):
         """Retrieves a single frame and its annotations.
 
         Args:
-            index : Index of the frame to retrieve.
+            index: Index of the frame to retrieve.
 
         Returns:
-            The image as a tensor.
-            List of bounding boxes in (x_min, y_min, width, height) format.
+            The image as a tensor, and a list of bounding boxes in (x_min, y_min, width, height) format.
         """
+
         cumulative_count = 0
         for sequence in self.sequences:
             img1_dir = os.path.join(self.video_dir, sequence, 'img1')
@@ -56,15 +63,18 @@ class MOTDataset(Dataset):
                 if self.transform:
                     frame = self.transform(frame)
 
-                annotation_file = os.path.join(self.annotation_dir, sequence, 'gt/gt.txt')
+                annotation_file = os.path.join(self.annotation_dir, sequence, f'{self.ann_folder}/{self.ann_folder}.txt')
                 annotations = self._load_annotations(annotation_file, img_file)
 
-                return frame, annotations
+                # Convert frame to tensor
+                frame_tensor = torch.from_numpy(frame).permute(2, 0, 1).float() / 255.0
+
+                return frame_tensor, annotations
 
             cumulative_count += num_frames
 
         raise IndexError(f"Index {index} out of range")
-    
+
 
     def _load_annotations(self, annotation_file: str, img_file: str) -> List[Tuple[float, float, float, float]]:
         """Loads annotations for a given image file.
@@ -74,9 +84,8 @@ class MOTDataset(Dataset):
             img_file: Name of the image file.
 
         Returns:
-            List of bounding boxes.
+            A list of bounding boxes.
         """
-        
         img_index = int(os.path.splitext(img_file)[0])
         annotations = []
 

@@ -22,7 +22,7 @@ def main(cfg: DictConfig):
     # Initialize dataset using the paths from the Hydra config
     dataset = MOTDataset(
         video_dir=cfg.data_loader.data_loader.video_dir,
-        annotation_dir=cfg.data_loader.data_loader.annotation_dir,
+        annotation_dir=cfg.data_loader.data_loader.video_dir,
     )
 
     # Visualize the annotation distribution across the entire dataset
