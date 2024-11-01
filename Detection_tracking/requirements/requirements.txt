@@ -1,0 +1,8 @@
+numpy==1.23.3
+torch==2.0.1
+opencv-python==4.5.5.64
+tqdm==4.62.3
+omegaconf==2.1.1
+matplotlib==3.4.3
+seaborn==0.11.2
+hydra-core==1.1.0
