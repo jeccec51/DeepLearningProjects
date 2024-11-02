@@ -90,17 +90,19 @@ def plot_annotation_distribution(dataset: MOTDataset) -> None:
                 x_min, y_min, width, height = box
                 bounding_box_widths.append(width)
                 bounding_box_heights.append(height)
-                aspect_ratios.append(width / height)
+                if height > 0:
+                    aspect_ratios.append(width / height)
             else:
                 logging.error(f"Unexpected format in bounding box: {box}")
                 raise ValueError("Bounding box is not in the expected format of (x_min, y_min, width, height).")
 
-    # Filter out any NaN or infinite values
-    bounding_box_widths = [w for w in bounding_box_widths if not (np.isnan(w) or np.isinf(w))]
-    bounding_box_heights = [h for h in bounding_box_heights if not (np.isnan(h) or np.isinf(h))]
-    aspect_ratios = [ar for ar in aspect_ratios if not (np.isnan(ar) or np.isinf(ar))]
+    # Convert lists to numpy arrays
+    bounding_box_widths = np.array([w for w in bounding_box_widths if not (np.isnan(w) or np.isinf(w))])
+    bounding_box_heights = np.array([h for h in bounding_box_heights if not (np.isnan(h) or np.isinf(h))])
+    aspect_ratios = np.array([ar for ar in aspect_ratios if not (np.isnan(ar) or np.isinf(ar))])
 
-    # Debugging information to verify data integrity
+
+
     logging.info(f"Number of valid widths: {len(bounding_box_widths)}")
     logging.info(f"Number of valid heights: {len(bounding_box_heights)}")
     logging.info(f"Number of valid aspect ratios: {len(aspect_ratios)}")
@@ -110,21 +112,24 @@ def plot_annotation_distribution(dataset: MOTDataset) -> None:
 
     # Plot the distribution of widths
     plt.subplot(1, 3, 1)
-    sns.histplot(bounding_box_widths, kde=True, bins=30)
-    plt.title("Distribution of Bounding Box Widths")
+    plt.hist(bounding_box_widths, bins=30, color='blue', alpha=0.7)
+    plt.title("Distribution of Bounding Box Widths (pixels)")
     plt.xlabel("Width")
+    plt.ylabel("Frequency")
 
     # Plot the distribution of heights
     plt.subplot(1, 3, 2)
-    sns.histplot(bounding_box_heights, kde=True, bins=30)
-    plt.title("Distribution of Bounding Box Heights")
+    plt.hist(bounding_box_heights, bins=30, color='green', alpha=0.7)
+    plt.title("Distribution of Bounding Box Heights (pixels)")
     plt.xlabel("Height")
+    plt.ylabel("Frequency")
 
     # Plot the distribution of aspect ratios
     plt.subplot(1, 3, 3)
-    sns.histplot(aspect_ratios, kde=True, bins=30)
-    plt.title("Distribution of Bounding Box Aspect Ratios")
+    plt.hist(aspect_ratios, bins=100, color='red', alpha=0.7)
+    plt.title("Distribution of Bounding Box Aspect Ratios (Width/Height)")
     plt.xlabel("Aspect Ratio (Width/Height)")
+    plt.ylabel("Frequency")
 
     plt.tight_layout()
     plt.show()

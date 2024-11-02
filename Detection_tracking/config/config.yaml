@@ -2,3 +2,4 @@ defaults:
   - model: model_det
   - data_loader: mot_20
   - train: train_tracking
+  - visu: mot_visu
