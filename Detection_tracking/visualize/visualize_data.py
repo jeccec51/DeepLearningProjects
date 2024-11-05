@@ -51,26 +51,44 @@ def visualize_frame_sequence(dataset: MOTDataset, sequence_index: int = 0, num_f
     frames_to_visualize = frames[:num_frames]  # Limit to the desired number of frames
 
     for frame_index in tqdm(range(num_frames), desc="Visualizing Frames"):
-        frame = frames_to_visualize[frame_index].permute(1, 2, 0).numpy()  # Convert from tensor (C, H, W) to (H, W, C)
-        bounding_boxes = frame_annotations[frame_index]
-        
+        frame = frames_to_visualize[frame_index]
+
+        # Check if the frame has 3 dimensions (C, H, W)
+        if frame.dim() == 2:
+            # Grayscale frame, add channel dimension
+            frame = frame.unsqueeze(0)  # Convert (H, W) to (1, H, W)
+
+        # Now frame should be (C, H, W)
+        if frame.size(0) == 1:
+            # If the frame is grayscale (single channel), repeat the channel to make it look like an RGB image
+            frame = frame.repeat(3, 1, 1)
+
+        # Convert from (C, H, W) to (H, W, C) for plotting
+        frame = frame.permute(1, 2, 0).numpy()
+
         # Convert frame to RGB for Matplotlib
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) if frame.shape[-1] == 3 else frame
+
         # Plot frame with annotations
         plt.figure(figsize=(10, 10))
         plt.imshow(frame_rgb)
-        
+
         # Draw bounding boxes
-        for box in bounding_boxes:
-            x_min, y_min, width, height = box
-            rect = plt.Rectangle((x_min, y_min), width, height, linewidth=2, edgecolor='r', facecolor='none')
-            plt.gca().add_patch(rect)
-        
+        if isinstance(frame_annotations, list):
+            for box in frame_annotations:
+                # Ensure the box has the expected four elements
+                if isinstance(box, tuple) and len(box) == 4:
+                    x_min, y_min, width, height = box
+                    rect = plt.Rectangle((x_min, y_min), width, height, linewidth=2, edgecolor='r', facecolor='none')
+                    plt.gca().add_patch(rect)
+                else:
+                    logging.error(f"Unexpected format in bounding box: {box}")
+        else:
+            logging.error(f"Unexpected format in frame_annotations: {frame_annotations}")
+
         plt.title(f"Frame {frame_index + 1} of sequence {sequence_index}")
         plt.axis('off')
         plt.show()
-
 
 def plot_annotation_distribution(dataset: MOTDataset) -> None:
     """Plots the distribution of bounding box sizes and locations across the dataset.
