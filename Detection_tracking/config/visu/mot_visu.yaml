@@ -1,4 +1,4 @@
-  short_run: true  # Set to true for a short run, false for full dataset
+  short_run: false  # Set to true for a short run, false for full dataset
   short_run_percentage: 0.01  # Use 1% of the dataset for short runs
   plot_annotation_distribution: true  # Set to true to visualize annotation distribution
   plot_spatial_distribution: true  # Set to true to visualize spatial distribution

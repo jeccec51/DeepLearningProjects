@@ -6,3 +6,5 @@ open_source/
 outputs/
 data/
 transformers_explained/__pycache__/train.cpython-38.pyc
+transformers_explained/tfenv
+.vscode/settings.json
