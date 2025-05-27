@@ -3,3 +3,4 @@ transformers_explained/tfenv
 .vscode/settings.json
 .DS_Store
 open_source/
+gen_ai/gen_ai/
