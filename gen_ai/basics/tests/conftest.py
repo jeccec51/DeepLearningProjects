@@ -1,7 +1,7 @@
 """Fixture for testing the genai modules."""
 
 import pytest
-from basics.src.char_encoder import CharTockenizer
+from basics.src.utilities.char_encoder import CharTockenizer
 
 
 @pytest.fixture
@@ -12,7 +12,8 @@ def sample_corpus() -> str:
 
 
 @pytest.fixture
-def tokenizer(sample_corpus) -> CharTockenizer:  # pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name
+def tokenizer(sample_corpus) -> CharTockenizer:
     """Returns a tokenizer class instance."""
 
     return CharTockenizer(sample_corpus)

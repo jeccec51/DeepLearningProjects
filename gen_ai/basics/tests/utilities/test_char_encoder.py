@@ -3,7 +3,12 @@
 from pathlib import Path
 import pytest
 
-from basics.src.char_encoder import build_vocab, encode, decode, CharTockenizer
+from basics.src.utilities.char_encoder import (
+    build_vocab,
+    encode,
+    decode,
+    CharTockenizer,
+)
 
 
 @pytest.mark.parametrize(
