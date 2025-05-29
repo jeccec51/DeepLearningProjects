@@ -4,7 +4,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import ndarray
-from basic_classifier import generate_2d_points_label_pair
+from basics.src.basic_classifier import generate_2d_points_label_pair
 
 
 def estimate_mean_std(point_coords: ndarray,
