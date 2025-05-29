@@ -1,7 +1,9 @@
 """Test module for char_encoder."""
 
+from pathlib import Path
 import pytest
-from basics.src.char_encoder import build_vocab, encode, decode
+
+from basics.src.char_encoder import build_vocab, encode, decode, CharTockenizer
 
 
 @pytest.mark.parametrize(
@@ -62,3 +64,35 @@ def test_decode(indices: list[int], expected: str) -> None:
     _, ivocab = build_vocab(string=expected)
     text = decode(indices=indices, ivocab=ivocab)
     assert text == expected
+
+
+def test_encode_decode_roundtrip(tokenizer: CharTockenizer) -> None:
+    """Module to test class encode . """
+
+    # GIVEN dummy text
+    text = "hello"
+    # WHEN encoded 
+    encoded = tokenizer.encode(text)
+    # WHEN decoded the encoded
+    decoded = tokenizer.decode(encoded)
+    # THEN
+    assert decoded == text
+
+
+def test_save_and_load_tokenizer(tmp_path: Path, sample_corpus: str) -> None:
+    """Module to test save nd load."""
+
+    # GIVEN a temp path
+    filepath = tmp_path / "vocab.json"
+
+    # WHEN the vocab is sved
+    original_tokenizer = CharTockenizer(sample_corpus)
+    original_tokenizer.save(str(filepath))
+
+    # WHEN the saved vocab is laoded
+    loaded_tokenizer = CharTockenizer.load(str(filepath))
+
+    # Should behave the same
+    assert loaded_tokenizer.encode("hello") == \
+        original_tokenizer.encode("hello")
+    assert loaded_tokenizer.decode([0, 1]) == original_tokenizer.decode([0, 1])
