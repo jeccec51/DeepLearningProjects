@@ -3,7 +3,7 @@
 from pathlib import Path
 import pytest
 
-from basics.src.utilities.char_encoder import (
+from basics.textgen.src.utilities.char_encoder import (
     build_vocab,
     encode,
     decode,
