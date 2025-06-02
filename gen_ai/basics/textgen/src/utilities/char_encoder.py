@@ -59,6 +59,16 @@ class CharTockenizer:
 
         self._vocab, self._ivocab = build_vocab(string=text)
 
+    @property
+    def vocab_size(self) -> int:
+        """Returns the size of vocab.
+
+        Returns:
+            _vocab length
+        """
+
+        return len(self._vocab)
+
     def encode(self, text: str) -> list[int]:
         """Module to encode the string. 
 

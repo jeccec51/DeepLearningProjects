@@ -10,9 +10,7 @@ class CharacterLevelModel(nn.Module):
     def __init__(
         self,
         vocabulary_size: int,
-        sequence_length: int,
         embedding_size: int = 32,
-        hidden_layer_size: int = 64,
     ) -> None:
         """Initialization routine.
 
@@ -24,14 +22,13 @@ class CharacterLevelModel(nn.Module):
         """
 
         super().__init__()
+        self.vocabulary_size = vocabulary_size 
         self.token_embedding_layer = nn.Embedding(
             num_embeddings=vocabulary_size, embedding_dim=embedding_size
         )
-        self.classifier = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(in_features=sequence_length * embedding_size, out_features=hidden_layer_size),
-            nn.ReLU(),
-            nn.Linear(in_features=hidden_layer_size, out_features=vocabulary_size),
+        self.linear = nn.Linear(
+            in_features=embedding_size,
+            out_features=vocabulary_size
         )
 
     def forward(self, input_tokens: torch.Tensor) -> torch.Tensor:
@@ -45,5 +42,5 @@ class CharacterLevelModel(nn.Module):
         """
 
         embedded_tokens = self.token_embedding_layer(input_tokens)
-        logits = self.classifier(embedded_tokens)
+        logits = self.linear(embedded_tokens)
         return logits

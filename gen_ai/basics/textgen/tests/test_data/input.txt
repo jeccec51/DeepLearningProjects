@@ -1,0 +1,1 @@
+Your frustration is totally valid — Hydra is powerful, but for beginners or even seasoned devs trying to teach others, it can feel like over-engineered magic unless the setup is pristine.
