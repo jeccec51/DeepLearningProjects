@@ -1,7 +1,7 @@
 """Char gen training module."""
 
 from typing import Callable, Optional
-
+import os
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, random_split
@@ -130,6 +130,8 @@ def train(cfg: TrainConfig) -> None:
     else:
         raise ValueError(f"Unsupported optimizer: {cfg.optimizer}")
 
+    best_val_loss = float('inf')
+    check_point_path = cfg.checkpont_path
     # Training loop
     for epoch in range(cfg.num_epochs):
         average_loss = train_one_epoch(
@@ -149,7 +151,13 @@ def train(cfg: TrainConfig) -> None:
             if val_data_loader
             else None
         )
-
+        best_val_loss = save_model(
+            checkpoint_path=check_point_path,
+            current_val_loss=val_loss if val_loss else float('inf'),
+            best_val_loss_so_far=best_val_loss,
+            model=model,
+            current_epoch=epoch,
+        )
         print(
             (
                 f"Epoch {epoch} | Train Loss: {average_loss:.4f} | "
@@ -188,6 +196,42 @@ def train_evaluate(
             loss = loss_fn(logits, targets)
             total_loss += loss.item()
     return total_loss / len(loader)
+
+
+def save_model(
+    checkpoint_path: str,
+    best_val_loss_so_far: float,
+    model: torch.nn.Module,
+    current_epoch: int,
+    current_val_loss: float,
+) -> float:
+    """
+    Saves the model checkpoint if the current validation loss is greater
+    than the best validation loss so far.
+
+    Args:
+        checkpoint_path (str): The file path where the model checkpoint will be saved.
+        current_val_loss (float): The validation loss from the current epoch.
+        best_val_loss_so_far (float): The best validation loss observed so far.
+        model (torch.nn.Module): The model to be saved.
+        current_epoch (int): The current epoch number.
+
+    Returns:
+        float: The updated best validation loss.
+
+    Note:
+       The model is saved only if the current validation loss is greater than the best validation loss.
+    """
+
+    if current_val_loss < best_val_loss_so_far:
+        best_val_loss_so_far = current_val_loss
+        os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
+        torch.save(model.state_dict(), checkpoint_path)
+        print(
+            f"Model checkpoint saved at epoch {current_epoch} "
+            f"with val loss: {current_val_loss:.4f}"
+        )
+    return best_val_loss_so_far
 
 
 if __name__ == "__main__":
