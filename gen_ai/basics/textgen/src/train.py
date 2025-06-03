@@ -11,6 +11,7 @@ from conf.training_config import TrainConfig
 from data.char_dataset import CharDataset
 from models.char_model import CharacterLevelModel
 from utilities.char_encoder import CharTockenizer
+from callbacks.accuracy import accuracy_callback_factory
 
 
 def load_data(
@@ -134,12 +135,15 @@ def train(cfg: TrainConfig) -> None:
     check_point_path = cfg.checkpont_path
     # Training loop
     for epoch in range(cfg.num_epochs):
+        accuracy_callback = accuracy_callback_factory()
+
         average_loss = train_one_epoch(
             model=model,
             loader=train_data_loader,
             optimizer=optimizer,
             loss_fn=loss_function,
             device=device,
+            on_step_end=accuracy_callback
         )
         val_loss = (
             train_evaluate(
@@ -158,13 +162,20 @@ def train(cfg: TrainConfig) -> None:
             model=model,
             current_epoch=epoch,
         )
+        epoch_accuracy = (
+            accuracy_callback.get_final_accuracy() * 100  # type: ignore
+        )
+    
         print(
             (
                 f"Epoch {epoch} | Train Loss: {average_loss:.4f} | "
                 f"Val Loss: {val_loss:.4f}"
             )
             if val_loss
-            else f"Epoch {epoch} | Train Loss: {average_loss:.4f}"
+            else (
+                f"Epoch {epoch} | Train Loss: {average_loss:.4f} | "
+                f"Accuracy: {epoch_accuracy:.2f}%"
+            )
         )
 
 

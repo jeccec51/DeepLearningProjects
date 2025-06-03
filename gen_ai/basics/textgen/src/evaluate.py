@@ -152,7 +152,7 @@ def main() -> None:
     # Generate text using the model and tokenizer
     generated_text = generate_text(
         model=model,
-        tokenizer=tockenizer, 
+        tokenizer=tockenizer,
         prompt=args.prompt,
         context_window=args.context_window,
     )
@@ -161,5 +161,5 @@ def main() -> None:
     print(generated_text)
 
 
-if __name__ == "__main_":
+if __name__ == "__main__":
     main()
