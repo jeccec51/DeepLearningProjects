@@ -220,7 +220,8 @@ def save_model(
         float: The updated best validation loss.
 
     Note:
-       The model is saved only if the current validation loss is greater than the best validation loss.
+       The model is saved only if the current validation loss is greater than
+       best validation loss.
     """
 
     if current_val_loss < best_val_loss_so_far:
