@@ -1,6 +1,7 @@
 """Module to encode charactors."""
 
 import json
+from tokenizer_base import BaseTokenizer
 
 
 def build_vocab(string: str) -> tuple[dict[str, int], dict[int, str]]:
@@ -47,7 +48,7 @@ def decode(indices: list[int], ivocab: dict[int, str]) -> str:
     return ''.join([ivocab[index] for index in indices])
 
 
-class CharTockenizer:
+class CharTockenizer(BaseTokenizer):
     """Module to tockanize the string."""
 
     def __init__(self, text: str) -> None:
@@ -78,7 +79,7 @@ class CharTockenizer:
 
         return encode(text=text, vocab=self._vocab)
 
-    def decode(self, indices: list[int]) -> str:
+    def decode(self, ids: list[int]) -> str:
         """Module to decode the encoded list.
 
         Args:
@@ -87,7 +88,7 @@ class CharTockenizer:
         Returns:
             the decoded string"""
 
-        return decode(indices=indices, ivocab=self._ivocab)
+        return decode(indices=ids, ivocab=self._ivocab)
 
     def save(self, filepath: str) -> None:
         """Module to save the string as json.
@@ -109,7 +110,7 @@ class CharTockenizer:
 
         with open(filepath, 'r', encoding='utf-8') as f:
             vocab = json.load(f)
-        obj = cls.__new__(cls)
+        obj: CharTockenizer = object.__new__(cls)
         obj._vocab = vocab
         obj._ivocab = {idx: ch for ch, idx in vocab.items()}
         return obj
