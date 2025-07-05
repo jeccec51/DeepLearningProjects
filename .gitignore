@@ -6,3 +6,4 @@ open_source/
 gen_ai/gen_ai/
 gen_ai/basics/textgen/outputs/
 gen_ai/.vscode/launch.json
+torch/
