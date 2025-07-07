@@ -15,3 +15,12 @@ class TrainConfig:
     optimizer: str = "adam"
     learning_rate: float = 1e-3
     training_fraction = 0.9
+
+@dataclass
+class TokenDataLoaderConfig:
+    """Token data loader config class. """
+
+    text_path: str = "basics/textgen/tests/test_data/token/input.txt"
+    context_window: int = 8
+    batch_size: int = 4
+    training_fraction: float = 0.9
