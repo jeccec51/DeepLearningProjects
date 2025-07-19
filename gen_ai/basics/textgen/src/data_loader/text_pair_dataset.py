@@ -31,8 +31,9 @@ class TextPairDataset(Dataset):
         Returns:
             A tuple containing input and target tensors.
         """
-        
+
         input_text, target_text = self.pairs[idx]
-        input_ids = self.tokenizer.encode(input_text, return_tensors='pt').squeeze(0)
-        target_ids = self.tokenizer.encode(target_text, return_tensors='pt').squeeze(0)
+        input_ids = torch.tensor(self.tokenizer.encode(input_text), dtype=torch.long)
+        target_ids = torch.tensor(self.tokenizer.encode(target_text), dtype=torch.long)
         return input_ids, target_ids
+    
